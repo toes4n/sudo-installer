@@ -1,37 +1,70 @@
 #!/bin/bash
 
-set -e
+# --- Configuration ---
+SUDO_VERSION="1.9.17p2"
+TARBALL="sudo-${SUDO_VERSION}.tar.gz"
+DOWNLOAD_URL="https://www.sudo.ws/dist/${TARBALL}"
+SOURCE_DIR="sudo-${SUDO_VERSION}"
+INSTALL_PREFIX="/usr" # Install to the standard /usr location
+TEMP_DIR="/usr/local/src" # Directory for source compilation
 
-# Update all packages and install development tools and dependencies
-if command -v dnf &> /dev/null; then
-    sudo dnf update -y
-    sudo dnf groupinstall "Development Tools" -y
-    sudo dnf install -y pam-devel openssl-devel wget
-elif command -v yum &> /dev/null; then
-    sudo yum update -y
-    sudo yum groupinstall "Development Tools" -y
-    sudo yum install -y pam-devel openssl-devel wget
-else
-    echo "Neither yum nor dnf found. Exiting."
-    exit 1
+# --- Pre-check and Setup ---
+echo "--- Starting sudo ${SUDO_VERSION} Installation Script ---"
+
+# Check if running as root
+if [[ $EUID -ne 0 ]]; then
+   echo "Error: This script must be run as root."
+   exit 1
 fi
 
-# Change to /tmp directory
-cd /tmp || { echo "Failed to cd /tmp"; exit 1; }
+# Install necessary development dependencies for Alibaba OS / CentOS / RHEL
+echo "1. Installing Development Tools and Dependencies..."
+# Using 'yum' for package management common to Alibaba/CentOS
+yum -y groupinstall "Development Tools" > /dev/null 2>&1
+yum -y install zlib-devel openssl-devel pam-devel git curl > /dev/null 2>&1
 
-# Download sudo 1.9.17p2 source tarball
-wget https://www.sudo.ws/dist/sudo-1.9.17p2.tar.gz
+# Create source directory and move into it
+mkdir -p "$TEMP_DIR"
+cd "$TEMP_DIR"
 
-# Extract the downloaded tarball
-tar -xzvf sudo-1.9.17p2.tar.gz
+# --- Download and Extract ---
+echo "2. Downloading and extracting source code..."
+if [ ! -f "$TARBALL" ]; then
+    curl -O "$DOWNLOAD_URL"
+fi
+tar -xvzf "$TARBALL"
+cd "$SOURCE_DIR"
 
-cd sudo-1.9.17p2 || { echo "Failed to cd to sudo source directory"; exit 1; }
+# --- Configure ---
+echo "3. Configuring build environment..."
+# Note: Using --prefix=/usr to overwrite the system binary path directly
+./configure \
+    --prefix="${INSTALL_PREFIX}" \
+    --libexecdir="${INSTALL_PREFIX}/lib" \
+    --with-secure-path \
+    --with-env-editor \
+    --with-passprompt="[sudo] password for %p: " \
+    --docdir="${INSTALL_PREFIX}/share/doc/${SOURCE_DIR}" \
+    --with-pam
 
-# Configure, build, and install sudo from source
-./configure
+# --- Compile and Install ---
+echo "4. Compiling code (This may take a few minutes)..."
 make
-sudo make install
 
-sudo -V
+echo "5. Installing (Overwriting system binaries)..."
+make install
 
-echo "Sudo 1.9.17p2 installation completed successfully."
+# --- Final Verification ---
+echo "6. Verifying Installation..."
+
+# Check the version of the newly installed binary
+NEW_VERSION=$(${INSTALL_PREFIX}/bin/sudo -V 2>/dev/null | head -n 1)
+
+if [[ "$NEW_VERSION" == *"Sudo version ${SUDO_VERSION}"* ]]; then
+    echo "✅ Success! ${NEW_VERSION} installed successfully."
+else
+    echo "❌ Error: Verification failed. The installed version is not ${SUDO_VERSION}."
+    echo "Installed version output: ${NEW_VERSION}"
+fi
+
+echo "--- Installation Complete ---"
