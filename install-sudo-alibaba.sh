@@ -2,7 +2,7 @@
 
 set -e
 
-# Update all packages
+# Update all packages and install development tools and dependencies
 if command -v dnf &> /dev/null; then
     sudo dnf update -y
     sudo dnf groupinstall "Development Tools" -y
@@ -12,40 +12,36 @@ elif command -v yum &> /dev/null; then
     sudo yum groupinstall "Development Tools" -y
     sudo yum install -y pam-devel openssl-devel wget
 else
-    echo "Neither yum nor dnf found. Exiting."
+    echo "Neither yum nor dnf. Exiting."
     exit 1
 fi
 
-# Go to /tmp directory
+# Change to /tmp directory
 cd /tmp || exit 1
 
 # Download sudo 1.9.17p2 source tarball
 wget https://www.sudo.ws/dist/sudo-1.9.17p2.tar.gz
 
-# Extract the tarball
+# Extract the downloaded tarball
 tar -xzvf sudo-1.9.17p2.tar.gz
 
 cd sudo-1.9.17p2 || exit 1
 
-# Configure, make, and install sudo
+# Configure, build, and install sudo from source
 ./configure
 make
 sudo make install
 
-# Backup existing sudo binary if it exists
+# Backup existing sudo binary if it exists and is not a symlink
 if [ -f /usr/bin/sudo ] && [ ! -L /usr/bin/sudo ]; then
     sudo mv /usr/bin/sudo /usr/bin/sudo.old
 fi
 
-# Create symlink to new sudo binary in /usr/bin
+# Create symbolic links for the new sudo binary
 sudo ln -sf /usr/local/bin/sudo /usr/bin/sudo
+sudo ln -sf /usr/local/bin/sudo /bin/sudo
 
-# Create symlink in /bin for compatibility if it doesn't exist
-if [ ! -L /bin/sudo ]; then
-    sudo ln -sf /usr/local/bin/sudo /bin/sudo
-fi
-
-# Verify sudo installation
+# Verify the installed sudo version
 sudo -V
 
 echo "Sudo 1.9.17p2 installation completed successfully."
