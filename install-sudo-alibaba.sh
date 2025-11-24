@@ -32,20 +32,6 @@ cd sudo-1.9.17p2 || { echo "Failed to cd to sudo source directory"; exit 1; }
 make
 sudo make install
 
-# Backup original /usr/bin/sudo if it exists and is not a symlink
-if [ -f /usr/bin/sudo ] && [ ! -L /usr/bin/sudo ]; then
-    sudo mv /usr/bin/sudo /usr/bin/sudo.old
-fi
-
-# Create symlink for new sudo binary in /usr/bin
-sudo ln -sf /usr/local/bin/sudo /usr/bin/sudo
-
-# Check if /bin exists (directory or symlink), then create symlink
-if [ -d /bin ] || [ -L /bin ]; then
-    sudo ln -sf /usr/local/bin/sudo /bin/sudo
-else
-    echo "/bin directory does not exist. Skipping /bin/sudo symlink."
-fi
-
+sudo -V
 
 echo "Sudo 1.9.17p2 installation completed successfully."
