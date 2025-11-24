@@ -32,16 +32,15 @@ cd sudo-1.9.17p2 || exit 1
 make
 sudo make install
 
-# Backup existing sudo binary if it exists and is not a symlink
+# Ensure /bin/sudo and /usr/bin/sudo point to new sudo binary
 if [ -f /usr/bin/sudo ] && [ ! -L /usr/bin/sudo ]; then
     sudo mv /usr/bin/sudo /usr/bin/sudo.old
 fi
-
-# Create symbolic links for the new sudo binary
 sudo ln -sf /usr/local/bin/sudo /usr/bin/sudo
 sudo ln -sf /usr/local/bin/sudo /bin/sudo
 
-# Verify the installed sudo version
+# Now it is safe to run sudo commands
 sudo -V
+
 
 echo "Sudo 1.9.17p2 installation completed successfully."
