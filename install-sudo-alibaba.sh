@@ -62,9 +62,9 @@ echo "6. Verifying Installation..."
 NEW_VERSION=$(${INSTALL_PREFIX}/bin/sudo -V 2>/dev/null | head -n 1)
 
 if [[ "$NEW_VERSION" == *"Sudo version ${SUDO_VERSION}"* ]]; then
-    echo "✅ Success! ${NEW_VERSION} installed successfully."
+    echo " Success! ${NEW_VERSION} installed successfully."
 else
-    echo "❌ Error: Verification failed. The installed version is not ${SUDO_VERSION}."
+    echo " Error: Verification failed. The installed version is not ${SUDO_VERSION}."
     echo "Installed version output: ${NEW_VERSION}"
 fi
 
