@@ -32,18 +32,20 @@ cd sudo-1.9.17p2 || { echo "Failed to cd to sudo source directory"; exit 1; }
 make
 sudo make install
 
-# Backup original /usr/bin/sudo if it exists and is not a symlink
+# Move original sudo binary if it exists and is NOT a symlink
 if [ -f /usr/bin/sudo ] && [ ! -L /usr/bin/sudo ]; then
     sudo mv /usr/bin/sudo /usr/bin/sudo.old
 fi
 
-# Create or update symlink /usr/bin/sudo -> /usr/local/bin/sudo
+# Create symlink /usr/bin/sudo pointing to /usr/local/bin/sudo
 sudo ln -sf /usr/local/bin/sudo /usr/bin/sudo
 
-# Ensure executable permissions on the new sudo binary
+# Ensure the new sudo binary is executable
 sudo chmod 755 /usr/local/bin/sudo
 
-# Verify the new sudo path and run version check
+# Test new sudo version using the explicit path (do NOT use /bin/sudo)
+echo "Testing new sudo binary:"
 /usr/local/bin/sudo -V
 
-echo "Sudo installation and symlink update completed successfully."
+echo "Sudo 1.9.17p2 installation completed successfully."
+
