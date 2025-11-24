@@ -37,17 +37,13 @@ if [ -f /usr/bin/sudo ] && [ ! -L /usr/bin/sudo ]; then
     sudo mv /usr/bin/sudo /usr/bin/sudo.old
 fi
 
-# Create symlink for new sudo binary in /usr/bin
+# Create or update symlink /usr/bin/sudo -> /usr/local/bin/sudo
 sudo ln -sf /usr/local/bin/sudo /usr/bin/sudo
 
-# Check if /bin exists (directory or symlink), then create symlink
-if [ -d /bin ] || [ -L /bin ]; then
-    sudo ln -sf /usr/local/bin/sudo /bin/sudo
-else
-    echo "/bin directory does not exist. Skipping /bin/sudo symlink."
-fi
+# Ensure executable permissions on the new sudo binary
+sudo chmod 755 /usr/local/bin/sudo
 
-# Test new sudo binary directly
+# Verify the new sudo path and run version check
 /usr/local/bin/sudo -V
 
-echo "Sudo 1.9.17p2 installation completed successfully."
+echo "Sudo installation and symlink update completed successfully."
