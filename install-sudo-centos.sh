@@ -38,3 +38,5 @@ ln -sf /usr/local/bin/sudo /bin/sudo
 /usr/local/bin/sudo -V
 
 echo "Sudo upgrade successfully."
+
+sudo -V
