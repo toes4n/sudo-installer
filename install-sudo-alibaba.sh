@@ -20,6 +20,7 @@ fi
 # Install necessary development dependencies for Alibaba OS / CentOS / RHEL
 echo "1. Installing Development Tools and Dependencies..."
 # Using 'yum' for package management common to Alibaba/CentOS
+yum update -y
 yum -y groupinstall "Development Tools" > /dev/null 2>&1
 yum -y install zlib-devel openssl-devel pam-devel git curl > /dev/null 2>&1
 
