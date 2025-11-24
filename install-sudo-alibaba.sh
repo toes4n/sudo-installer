@@ -69,4 +69,4 @@ else
 fi
 
 echo "--- Installation Complete ---"
-sudo -V
+sudo -V | head -n 1
