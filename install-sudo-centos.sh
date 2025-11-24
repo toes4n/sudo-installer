@@ -35,8 +35,8 @@ ln -sf /usr/local/bin/sudo /usr/bin/sudo
 ln -sf /usr/local/bin/sudo /bin/sudo
 
 # Verify new sudo version
-/usr/local/bin/sudo -V
+/usr/local/bin/sudo -V | head -n 1
 
 echo "Sudo upgrade successfully."
 
-sudo -V
+sudo -V | head -n 1
