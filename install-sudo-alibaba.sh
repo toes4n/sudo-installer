@@ -2,7 +2,7 @@
 
 SUDO_VERSION="1.9.17p2"
 TEMP_DIR="/usr/local/src"
-
+chmod 755 /usr/bin/gcc
 # Ensure GCC works
 if ! /usr/bin/gcc --version &>/dev/null; then
     echo "ERROR: GCC still not working. "
