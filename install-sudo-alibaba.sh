@@ -5,7 +5,7 @@ TEMP_DIR="/usr/local/src"
 
 # Ensure GCC works
 if ! /usr/bin/gcc --version &>/dev/null; then
-    echo "ERROR: GCC still not working. Run fix-gcc.sh first."
+    echo "ERROR: GCC still not working. "
     exit 1
 fi
 
