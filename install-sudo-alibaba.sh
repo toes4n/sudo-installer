@@ -17,12 +17,17 @@ if [[ $EUID -ne 0 ]]; then
    exit 1
 fi
 
-# Install necessary development dependencies for Alibaba OS / CentOS / RHEL
+# Install necessary development dependencies for Alibaba Linux 3
 echo "1. Installing Development Tools and Dependencies..."
-# Using 'yum' for package management common to Alibaba/CentOS
 yum update -y
-yum -y groupinstall "Development Tools" > /dev/null 2>&1
-yum -y install zlib-devel openssl-devel pam-devel git curl > /dev/null 2>&1
+yum -y install gcc gcc-c++ make zlib-devel openssl-devel pam-devel git curl
+
+# Verify GCC installation
+if ! command -v gcc &> /dev/null; then
+    echo "Error: gcc installation failed. Cannot proceed."
+    exit 1
+fi
+echo "✓ GCC installed successfully: $(gcc --version | head -n1)"
 
 # Create source directory and move into it
 mkdir -p "$TEMP_DIR"
@@ -32,13 +37,22 @@ cd "$TEMP_DIR"
 echo "2. Downloading and extracting source code..."
 if [ ! -f "$TARBALL" ]; then
     curl -O "$DOWNLOAD_URL"
+    if [ $? -ne 0 ]; then
+        echo "Error: Failed to download sudo source tarball."
+        exit 1
+    fi
 fi
-tar -xvzf "$TARBALL"
+
+tar -xzf "$TARBALL"
+if [ $? -ne 0 ]; then
+    echo "Error: Failed to extract tarball."
+    exit 1
+fi
+
 cd "$SOURCE_DIR"
 
 # --- Configure ---
 echo "3. Configuring build environment..."
-# Note: Using --prefix=/usr to overwrite the system binary path directly
 ./configure \
     --prefix="${INSTALL_PREFIX}" \
     --libexecdir="${INSTALL_PREFIX}/lib" \
@@ -48,12 +62,27 @@ echo "3. Configuring build environment..."
     --docdir="${INSTALL_PREFIX}/share/doc/${SOURCE_DIR}" \
     --with-pam
 
+if [ $? -ne 0 ]; then
+    echo "Error: Configuration failed. Check config.log for details."
+    exit 1
+fi
+
 # --- Compile and Install ---
 echo "4. Compiling code (This may take a few minutes)..."
 make
 
+if [ $? -ne 0 ]; then
+    echo "Error: Compilation failed."
+    exit 1
+fi
+
 echo "5. Installing (Overwriting system binaries)..."
 make install
+
+if [ $? -ne 0 ]; then
+    echo "Error: Installation failed."
+    exit 1
+fi
 
 # --- Final Verification ---
 echo "6. Verifying Installation..."
@@ -62,10 +91,11 @@ echo "6. Verifying Installation..."
 NEW_VERSION=$(${INSTALL_PREFIX}/bin/sudo -V 2>/dev/null | head -n 1)
 
 if [[ "$NEW_VERSION" == *"Sudo version ${SUDO_VERSION}"* ]]; then
-    echo " Success! ${NEW_VERSION} installed successfully."
+    echo "✓ Success! ${NEW_VERSION} installed successfully."
 else
-    echo " Error: Verification failed. The installed version is not ${SUDO_VERSION}."
-    echo "Installed version output: ${NEW_VERSION}"
+    echo "✗ Warning: Verification shows unexpected version."
+    echo "Expected: Sudo version ${SUDO_VERSION}"
+    echo "Got: ${NEW_VERSION}"
 fi
 
 echo "--- Installation Complete ---"
